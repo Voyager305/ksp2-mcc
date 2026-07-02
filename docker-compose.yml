@@ -1,0 +1,46 @@
+services:
+  backend:
+    build: ./backend
+    container_name: mcc-backend
+    environment:
+      # OpenAI-совместимый провайдер (по умолчанию Cloud.ru Foundation Models)
+      - MCC_API_KEY=${MCC_API_KEY:-}
+      - MCC_BASE_URL=${MCC_BASE_URL:-https://foundation-models.api.cloud.ru/v1}
+      - MCC_MODEL=${MCC_MODEL:-deepseek-ai/DeepSeek-V3}
+      - MCC_MAX_TOKENS=${MCC_MAX_TOKENS:-4096}
+      - MCC_TEMPERATURE=${MCC_TEMPERATURE:-0.3}
+      - MCC_STREAM=${MCC_STREAM:-1}
+      - MCC_MAX_TOOL_ITERATIONS=${MCC_MAX_TOOL_ITERATIONS:-0}
+      - MCC_KEEP_RECENT_TOOL_RESULTS=${MCC_KEEP_RECENT_TOOL_RESULTS:-24}
+      - KSP_BRIDGE_HOST=${KSP_BRIDGE_HOST:-host.docker.internal}
+      - KSP_BRIDGE_PORT=${KSP_BRIDGE_PORT:-8766}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - mcc-data:/data
+    ports:
+      - "8000:8000"
+    restart: unless-stopped
+
+  frontend:
+    build: ./frontend
+    container_name: mcc-frontend
+    depends_on:
+      - backend
+    ports:
+      - "3000:80"
+    restart: unless-stopped
+
+  # Одноразовая сборка мода против DLL установленной игры:
+  #   docker compose --profile mod run --rm mod-builder
+  mod-builder:
+    image: mcr.microsoft.com/dotnet/sdk:8.0
+    profiles: ["mod"]
+    working_dir: /src
+    volumes:
+      - ./mod:/src
+      - "${KSP2_DIR:-C:\\Games\\Kerbal Space Program 2}:/game:ro"
+    command: dotnet build -c Release -o dist
+
+volumes:
+  mcc-data:

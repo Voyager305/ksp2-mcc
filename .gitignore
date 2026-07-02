@@ -1,0 +1,8 @@
+.env
+mod/dist/
+mod/obj/
+mod/bin/
+frontend/node_modules/
+frontend/dist/
+__pycache__/
+*.pyc

@@ -1,0 +1,23 @@
+{
+  "spec": "2.0",
+  "mod_id": "com.mcc.mcclink",
+  "author": "MCC",
+  "name": "MCC Link",
+  "description": "Telemetry and command TCP bridge for the LLM Mission Control Center.",
+  "source": "",
+  "version": "0.1.0",
+  "version_check": "",
+  "dependencies": [
+    {
+      "id": "com.github.x606.spacewarp",
+      "version": {
+        "min": "1.9.5",
+        "max": "*"
+      }
+    }
+  ],
+  "ksp2_version": {
+    "min": "0.2.0",
+    "max": "*"
+  }
+}

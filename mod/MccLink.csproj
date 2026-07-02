@@ -1,0 +1,57 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net472</TargetFramework>
+    <AssemblyName>MccLink</AssemblyName>
+    <RootNamespace>MccLink</RootNamespace>
+    <LangVersion>latest</LangVersion>
+    <Version>0.1.0</Version>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <CopyLocalLockFileAssemblies>false</CopyLocalLockFileAssemblies>
+    <DebugType>none</DebugType>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <!-- Path to the KSP2 install; in the docker build the game dir is mounted at /game -->
+    <KSP2_DIR Condition="'$(KSP2_DIR)' == ''">/game</KSP2_DIR>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Reference assemblies so net472 builds on Linux without an installed .NET Framework -->
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="all" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="Assembly-CSharp">
+      <HintPath>$(KSP2_DIR)/KSP2_x64_Data/Managed/Assembly-CSharp.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine">
+      <HintPath>$(KSP2_DIR)/KSP2_x64_Data/Managed/UnityEngine.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.CoreModule">
+      <HintPath>$(KSP2_DIR)/KSP2_x64_Data/Managed/UnityEngine.CoreModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="Newtonsoft.Json">
+      <HintPath>$(KSP2_DIR)/KSP2_x64_Data/Managed/Newtonsoft.Json.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="BepInEx">
+      <HintPath>$(KSP2_DIR)/BepInEx/core/BepInEx.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="0Harmony">
+      <HintPath>$(KSP2_DIR)/BepInEx/core/0Harmony.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="SpaceWarp">
+      <HintPath>$(KSP2_DIR)/BepInEx/plugins/SpaceWarp/SpaceWarp.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="SpaceWarp.Core">
+      <HintPath>$(KSP2_DIR)/BepInEx/plugins/SpaceWarp/SpaceWarp.Core.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+
+</Project>
