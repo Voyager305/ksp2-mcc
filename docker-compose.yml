@@ -30,6 +30,17 @@ services:
       - "3000:80"
     restart: unless-stopped
 
+  # Реальный NASA Open MCT (nasa/openmct) с адаптером телеметрии к backend.
+  # Открывать на http://localhost:3001
+  openmct:
+    build: ./openmct
+    container_name: mcc-openmct
+    depends_on:
+      - backend
+    ports:
+      - "3001:8080"
+    restart: unless-stopped
+
   # Одноразовая сборка мода против DLL установленной игры:
   #   docker compose --profile mod run --rm mod-builder
   mod-builder:

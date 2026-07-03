@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { fmtSituation } from "../format";
 import type { MccState } from "../types";
 
@@ -24,9 +25,36 @@ function fmtUT(ut: number | undefined): string {
   return `D${day} ${p2(h)}:${p2(m)}:${p2(s)}`;
 }
 
+function useUtcClock(): string {
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const id = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(id);
+  }, []);
+  return new Date(now).toISOString().slice(0, 19).replace("T", " ");
+}
+
+const HB_COLOR = ["hb-green", "hb-yellow", "hb-orange", "hb-orange", "hb-red"];
+
+function BusIndicator({ state }: { state: MccState }) {
+  const hb = state.heartbeat;
+  // Шина считается «живой», если heartbeat приходил недавно (< 3 периодов).
+  const alive =
+    hb != null && Date.now() - hb.at < Math.max(3000, (hb.pub_rate_s || 5) * 3000);
+  const cls = alive ? HB_COLOR[hb!.component_status] ?? "hb-red" : "hb-dead";
+  return (
+    <span className={`bus ${cls}`} title="Шина сообщений GMSEC (C2CX.HB)">
+      <span className="bus-dot" aria-hidden="true" />
+      ШИНА GMSEC
+      {hb?.counter != null ? <span className="bus-seq">#{hb.counter}</span> : null}
+    </span>
+  );
+}
+
 export function Header({ state }: { state: MccState }) {
   const v = state.telemetry?.vessel;
   const ut = state.telemetry?.ut;
+  const utc = useUtcClock();
   return (
     <header className="header">
       <div className="header-title">
@@ -34,7 +62,7 @@ export function Header({ state }: { state: MccState }) {
           ⏣
         </span>
         <h1>
-          ЦУП <span className="header-sub">Mission Control Center</span>
+          Mission Control Center <span className="header-sub"> </span>
         </h1>
       </div>
 
@@ -47,6 +75,8 @@ export function Header({ state }: { state: MccState }) {
       </div>
 
       <div className="header-status">
+        <span className="header-utc">{utc} UTC</span>
+        <BusIndicator state={state} />
         <StatusPill
           ok={state.wsConnected}
           okText="Наз. комплекс: готов"

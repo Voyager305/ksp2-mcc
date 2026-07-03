@@ -47,6 +47,13 @@ MCC_KEEP_RECENT_TOOL_RESULTS = _int("MCC_KEEP_RECENT_TOOL_RESULTS", 24)
 # Некоторые провайдеры/модели не поддерживают stream=true вместе с tools.
 MCC_STREAM = os.environ.get("MCC_STREAM", "1") not in ("0", "false", "False")
 
+# ---------------------------------------------------------------- Шина сообщений (GMSEC-стиль)
+# По образцу NASA GMSEC: каждое сообщение шины получает иерархический subject
+# <MISSION>.<COMPONENT>.MSG.<TYPE> и заголовок. MISSION-ID задаёт префикс тем.
+MCC_MISSION = os.environ.get("MCC_MISSION", "KSP2")
+# Период публикации heartbeat (C2CX.HB) от backend, сек. 0 — отключить.
+MCC_HEARTBEAT_S = _float("MCC_HEARTBEAT_S", 5.0)
+
 # Storage
 DB_PATH = os.environ.get("MCC_DB_PATH", "/data/mcc.db")
 

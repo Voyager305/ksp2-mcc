@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <title>ЦУП KSP2 · Open MCT</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no" />
+    <script src="/openmct-dist/openmct.js"></script>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script src="/ksp-plugin.js"></script>
+    <script>
+      // Видимый перехват ошибок — чтобы падение не оставалось чёрным экраном.
+      function showError(where, err) {
+        var pre = document.createElement("pre");
+        pre.style.cssText =
+          "position:fixed;top:0;left:0;right:0;z-index:99999;margin:0;padding:14px;" +
+          "background:#2a0a0a;color:#ffcf6f;font:12px/1.5 monospace;white-space:pre-wrap;" +
+          "border-bottom:2px solid #ff3c00;max-height:60vh;overflow:auto";
+        pre.textContent =
+          "ЦУП: ошибка Open MCT (" + where + ")\n\n" +
+          (err && (err.stack || err.message) ? err.stack || err.message : String(err));
+        document.body.appendChild(pre);
+      }
+      window.addEventListener("error", function (e) { showError("window.onerror", e.error || e.message); });
+      window.addEventListener("unhandledrejection", function (e) { showError("promise", e.reason); });
+
+      var HALF_HOUR = 30 * 60 * 1000;
+      var THIRTY_SEC = 30 * 1000;
+
+      try {
+        openmct.setAssetPath("/openmct-dist");
+
+        // --- плагины ядра (строго как в штатном index.html Open MCT) ---
+        openmct.install(openmct.plugins.LocalStorage());
+        openmct.install(openmct.plugins.Espresso()); // тёмная тема NASA
+        openmct.install(openmct.plugins.MyItems());
+        openmct.install(openmct.plugins.UTCTimeSystem());
+        openmct.install(openmct.plugins.DisplayLayout({ showAsView: ["summary-widget"] }));
+
+        // Тайм-кондуктор — БЕЗ него основной вид не отрисовывается.
+        openmct.install(
+          openmct.plugins.Conductor({
+            menuOptions: [
+              {
+                name: "Реальное время",
+                timeSystem: "utc",
+                clock: "local",
+                clockOffsets: { start: -HALF_HOUR, end: THIRTY_SEC },
+                presets: [
+                  { label: "30 минут", bounds: { start: -HALF_HOUR, end: THIRTY_SEC } },
+                  { label: "5 минут", bounds: { start: -5 * 60 * 1000, end: THIRTY_SEC } },
+                ],
+              },
+              {
+                name: "Фиксированное",
+                timeSystem: "utc",
+                bounds: { start: Date.now() - HALF_HOUR, end: Date.now() },
+              },
+            ],
+          })
+        );
+
+        openmct.install(openmct.plugins.SummaryWidget());
+        openmct.install(openmct.plugins.LADTable());
+        openmct.install(openmct.plugins.Filters(["table", "telemetry.plot.overlay"]));
+        openmct.install(openmct.plugins.Clock({ enableClockIndicator: true }));
+        openmct.install(openmct.plugins.Timer());
+        openmct.install(openmct.plugins.BarChart());
+        openmct.install(openmct.plugins.ScatterPlot());
+
+        // --- адаптер телеметрии KSP2 (изолирован) ---
+        try {
+          openmct.install(KSPPlugin());
+        } catch (e) {
+          showError("KSPPlugin", e);
+        }
+
+        document.addEventListener("DOMContentLoaded", function () {
+          try {
+            openmct.start();
+          } catch (e) {
+            showError("start", e);
+          }
+        });
+      } catch (e) {
+        showError("install", e);
+      }
+    </script>
+  </body>
+</html>

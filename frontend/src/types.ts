@@ -154,6 +154,19 @@ export interface TrackPoint {
   lon: number;
 }
 
+// Heartbeat шины GMSEC (C2CX.HB) от backend.
+export interface Heartbeat {
+  component: string;
+  component_status: number; // 0 GREEN, 1 YELLOW, 2 ORANGE, 4 RED
+  bridge_connected: boolean;
+  agent_state: string;
+  telemetry_age_s: number | null;
+  subscribers: number;
+  pub_rate_s: number;
+  counter?: number; // GMSEC COUNTER последнего сообщения
+  at: number; // локальное время приёма (мс)
+}
+
 export interface MccState {
   wsConnected: boolean;
   bridgeConnected: boolean;
@@ -165,4 +178,5 @@ export interface MccState {
   log: LogEntry[];
   console: ConsoleItem[];
   pendingTool: string | null;
+  heartbeat: Heartbeat | null;
 }

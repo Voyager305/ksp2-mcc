@@ -1,0 +1,11 @@
+# Custom Ollama model for the MCC dispatcher.
+# Base: Qwen2.5-7B-Instruct (strong OpenAI-style function calling, fits 8 GB VRAM).
+# The agent sends a large system prompt + telemetry history, so the default
+# 2K context is too small — bump it. 16K fits a 7B Q4 model + KV cache in ~7 GB.
+FROM qwen2.5:7b
+
+# 8K context fits the agent's system prompt + tool schemas + recent telemetry
+# comfortably in 8 GB VRAM and loads faster than 16K.
+PARAMETER num_ctx 8192
+# temperature 0 = deterministic, most reliable tool-call formatting for a 7B model.
+PARAMETER temperature 0

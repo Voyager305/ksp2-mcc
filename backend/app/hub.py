@@ -1,6 +1,12 @@
-"""In-process pub/sub hub: everything the UI needs to see flows through here."""
+"""In-process pub/sub hub: everything the UI needs to see flows through here.
+
+Шина в стиле NASA GMSEC: каждое публикуемое сообщение получает GMSEC-конверт
+(иерархический subject + заголовок) через gmsec.envelope().
+"""
 import asyncio
 from typing import Any
+
+from . import gmsec
 
 
 class Hub:
@@ -15,7 +21,12 @@ class Hub:
     def unsubscribe(self, q: asyncio.Queue) -> None:
         self._subscribers.discard(q)
 
+    @property
+    def subscriber_count(self) -> int:
+        return len(self._subscribers)
+
     def publish(self, message: dict[str, Any]) -> None:
+        gmsec.envelope(message)
         for q in list(self._subscribers):
             try:
                 q.put_nowait(message)

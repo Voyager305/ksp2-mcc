@@ -1,28 +1,23 @@
 import { useEffect, useMemo, useReducer, useRef, useState } from "react";
 import { CautionWarning } from "./components/CautionWarning";
-import { Charts } from "./components/Charts";
 import { Console } from "./components/Console";
 import { DockingDisplay } from "./components/DockingDisplay";
 import { EventLog } from "./components/EventLog";
-import { GroundTrack } from "./components/GroundTrack";
 import { Header } from "./components/Header";
 import { ManualPanel } from "./components/ManualPanel";
 import { Navball } from "./components/Navball";
-import { OrbitalView } from "./components/OrbitalView";
-import { StageStack } from "./components/StageStack";
-import { StatTiles } from "./components/StatTiles";
-import { Systems } from "./components/Systems";
+import { ReadinessPoll } from "./components/ReadinessPoll";
 
 import type { ChartPoint, ConsoleItem, MccState, Telemetry } from "./types";
 import { MccSocket } from "./ws";
 
-type TabId = "console" | "docking" | "systems" | "log";
+type TabId = "console" | "docking" | "manual" | "log";
 
 const TABS: { id: TabId; label: string }[] = [
-  { id: "console", label: "Пульт" },
+  { id: "console", label: "Пульт руководителя" },
   { id: "docking", label: "Стыковка" },
-  { id: "systems", label: "Системы" },
-  { id: "log", label: "Журнал" },
+  { id: "manual", label: "Ручное управление" },
+  { id: "log", label: "Журнал операций" },
 ];
 
 interface Api {
@@ -32,58 +27,15 @@ interface Api {
   resetAgent: () => void;
 }
 
-// Panels that can be popped out into their own browser window (multi-monitor).
-const PANELS: { id: string; label: string }[] = [
-  { id: "groundtrack", label: "Трасса полёта" },
-  { id: "docking", label: "Стыковка" },
-  { id: "navball", label: "Ориентация" },
-  { id: "orbital", label: "Орбита" },
-  { id: "cw", label: "Аварийная сигнализация" },
-  { id: "systems", label: "Бортовые системы" },
-  { id: "charts", label: "Тренды" },
-  { id: "console", label: "Руководитель полёта" },
-  { id: "log", label: "Журнал операций" },
-];
+// Телеметрия, тренды и приборы вынесены в Open MCT (порт 3001).
+// Кастомный пульт отвечает только за командование: диспетчер (ЛЛМ),
+// контроль готовности, стыковку и ручное управление.
+const OPENMCT_URL = `http://${location.hostname || "localhost"}:3001`;
 
-function renderPanel(id: string, state: MccState, api: Api) {
-  switch (id) {
-    case "groundtrack":
-      return <GroundTrack vessel={state.telemetry?.vessel} track={state.track} body={state.trackBody} />;
-    case "navball":
-      return <Navball vessel={state.telemetry?.vessel} />;
-    case "orbital":
-      return <OrbitalView vessel={state.telemetry?.vessel} />;
-    case "docking":
-      return <DockingDisplay vessel={state.telemetry?.vessel} onCommand={api.sendCommand} />;
-    case "systems":
-      return <Systems telemetry={state.telemetry} />;
-    case "cw":
-      return <CautionWarning telemetry={state.telemetry} />;
-    case "charts":
-      return <Charts data={state.chart} />;
-    case "tiles":
-      return <StatTiles telemetry={state.telemetry} />;
-    case "stack":
-      return <StageStack telemetry={state.telemetry} />;
-    case "console":
-      return (
-        <Console
-          state={state}
-          onDirective={api.sendDirective}
-          onStop={api.stopAgent}
-          onReset={api.resetAgent}
-        />
-      );
-    case "log":
-      return <EventLog log={state.log} />;
-    default:
-      return <div className="dock-empty">неизвестная панель: {id}</div>;
-  }
-}
-
-function openPanel(id: string) {
-  const url = `${location.pathname}?panel=${encodeURIComponent(id)}`;
-  window.open(url, `mcc_${id}`, "width=760,height=620,menubar=no,toolbar=no,location=no");
+// Стыковку можно вынести в отдельное окно (второй монитор оператора сближения).
+function openDocking() {
+  const url = `${location.pathname}?panel=docking`;
+  window.open(url, "mcc_docking", "width=760,height=680,menubar=no,toolbar=no,location=no");
 }
 
 const MAX_CHART_POINTS = 900;
@@ -108,6 +60,7 @@ const initial: MccState = {
   log: [],
   console: [],
   pendingTool: null,
+  heartbeat: null,
 };
 
 function telemetryToPoint(t: Telemetry): ChartPoint {
@@ -148,7 +101,6 @@ function reduce(state: MccState, action: Action): MccState {
       return { ...state, wsConnected: action.connected };
 
     case "history": {
-      // Prepend fetched history before any live points already collected.
       const firstLive = state.chart[0]?.ts ?? Infinity;
       const old = action.points.filter((p) => p.ts < firstLive);
       return { ...state, chart: [...old, ...state.chart] };
@@ -187,7 +139,6 @@ function applyServer(state: MccState, msg: Record<string, unknown>): MccState {
         if (chart.length > MAX_CHART_POINTS) chart = chart.slice(chart.length - MAX_CHART_POINTS);
       }
 
-      // Ground track: reset when the vessel changes body; append moved points.
       const v = t.vessel;
       const body = v?.body ?? null;
       let track = state.track;
@@ -211,6 +162,25 @@ function applyServer(state: MccState, msg: Record<string, unknown>): MccState {
       const entry = msg.entry as MccState["log"][number];
       const log = [...state.log, entry];
       return { ...state, log: log.length > MAX_LOG ? log.slice(log.length - MAX_LOG) : log };
+    }
+
+    case "heartbeat": {
+      const d = (msg.data ?? {}) as Record<string, unknown>;
+      const gm = (msg.gmsec ?? {}) as Record<string, unknown>;
+      return {
+        ...state,
+        heartbeat: {
+          component: String(d.component ?? "MCC"),
+          component_status: Number(d.component_status ?? 4),
+          bridge_connected: Boolean(d.bridge_connected),
+          agent_state: String(d.agent_state ?? "idle"),
+          telemetry_age_s: d.telemetry_age_s == null ? null : Number(d.telemetry_age_s),
+          subscribers: Number(d.subscribers ?? 0),
+          pub_rate_s: Number(d.pub_rate_s ?? 0),
+          counter: gm.COUNTER == null ? undefined : Number(gm.COUNTER),
+          at: Date.now(),
+        },
+      };
     }
 
     case "agent_event":
@@ -245,7 +215,6 @@ function applyAgentEvent(state: MccState, ev: Record<string, unknown>): MccState
         }),
       };
     case "tool_result": {
-      // Attach the result to the most recent running tool with this name.
       const items = [...state.console];
       for (let i = items.length - 1; i >= 0; i--) {
         const it = items[i];
@@ -315,7 +284,7 @@ export default function App() {
     return () => socket.close();
   }, []);
 
-  const api = useMemo(
+  const api = useMemo<Api>(
     () => ({
       sendDirective(text: string) {
         if (socketRef.current?.send({ type: "directive", text })) {
@@ -335,17 +304,18 @@ export default function App() {
     [],
   );
 
-  // Pop-out window: render just one panel full-screen with its own live socket.
-  if (panelParam) {
-    const label = PANELS.find((p) => p.id === panelParam)?.label ?? panelParam;
+  // Выносное окно стыковки: только пульт сближения на весь экран.
+  if (panelParam === "docking") {
     return (
       <div className="app panel-window">
         <div className="panel-titlebar">
           <span className={`pw-dot ${state.bridgeConnected ? "pw-on" : "pw-off"}`} />
-          <span className="pw-label">{label}</span>
+          <span className="pw-label">Стыковка · пульт оператора сближения</span>
           <span className="pw-sub">ЦУП · выносное окно</span>
         </div>
-        <div className="panel-content">{renderPanel(panelParam, state, api)}</div>
+        <div className="panel-content">
+          <DockingDisplay vessel={state.telemetry?.vessel} onCommand={api.sendCommand} />
+        </div>
       </div>
     );
   }
@@ -366,35 +336,28 @@ export default function App() {
               </button>
             ))}
             <div className="tabbar-spacer" />
-            <div className="popout-launcher">
-              <span className="pl-label">⧉ Вынести:</span>
-              {PANELS.map((p) => (
-                <button key={p.id} className="pl-btn" onClick={() => openPanel(p.id)} title={`Открыть «${p.label}» в отдельном окне`}>
-                  {p.label}
-                </button>
-              ))}
-            </div>
+            <a className="omct-link" href={OPENMCT_URL} target="_blank" rel="noreferrer" title="Телеметрия, тренды и приборы борта в Open MCT">
+              ◱ Телеметрия · Open MCT
+            </a>
           </nav>
 
           <div className="tabpanel">
             {tab === "console" && (
-              <div className="grid-console">
-                <div className="gc-tiles">
-                  <StatTiles telemetry={state.telemetry} />
-                </div>
-                <div className="gc-map">
-                  <GroundTrack
-                    vessel={state.telemetry?.vessel}
-                    track={state.track}
-                    body={state.trackBody}
-                  />
-                </div>
-                <div className="gc-right">
-                  <Navball vessel={state.telemetry?.vessel} />
-                  <CautionWarning telemetry={state.telemetry} />
-                </div>
-                <div className="gc-charts">
-                  <Charts data={state.chart} />
+              <div className="grid-pult">
+                <ReadinessPoll telemetry={state.telemetry} onDirective={api.sendDirective} />
+                <CautionWarning telemetry={state.telemetry} />
+                <div className="card omct-card">
+                  <div className="card-title">
+                    <h2>Телеметрия борта</h2>
+                    <span className="card-note">внешний пост</span>
+                  </div>
+                  <p className="omct-hint">
+                    Приборы, тренды, трасса полёта и орбита выведены в Open MCT —
+                    штатное ПО отображения телеметрии.
+                  </p>
+                  <a className="omct-open" href={OPENMCT_URL} target="_blank" rel="noreferrer">
+                    Открыть пост телеметрии (Open MCT) →
+                  </a>
                 </div>
               </div>
             )}
@@ -402,22 +365,25 @@ export default function App() {
             {tab === "docking" && (
               <div className="grid-docking">
                 <DockingDisplay vessel={state.telemetry?.vessel} onCommand={api.sendCommand} />
-                <OrbitalView vessel={state.telemetry?.vessel} />
+                <div className="dock-side">
+                  <Navball vessel={state.telemetry?.vessel} />
+                  <button className="dock-popout" onClick={openDocking}>
+                    ⧉ Вынести стыковку в отдельное окно
+                  </button>
+                </div>
               </div>
             )}
 
-            {tab === "systems" && (
-              <div className="grid-systems">
-                <CautionWarning telemetry={state.telemetry} />
-                <Systems telemetry={state.telemetry} />
-                <StageStack telemetry={state.telemetry} />
+            {tab === "manual" && (
+              <div className="grid-manual">
+                <ManualPanel state={state} onCommand={api.sendCommand} />
+                <Navball vessel={state.telemetry?.vessel} />
               </div>
             )}
 
             {tab === "log" && (
               <div className="grid-log">
                 <EventLog log={state.log} />
-                <ManualPanel state={state} onCommand={api.sendCommand} />
               </div>
             )}
           </div>

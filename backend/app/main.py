@@ -7,7 +7,7 @@ from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
-from . import config
+from . import config, gmsec
 from .agent import DispatcherAgent
 from .bridge import BridgeError, KspBridge
 from .db import EventLog
@@ -28,10 +28,48 @@ agent = DispatcherAgent(hub, executor, event_log)
 _background: list[asyncio.Task] = []
 
 
+async def heartbeat_loop() -> None:
+    """Периодический C2CX.HB backend'а — как компонент шины GMSEC.
+
+    COMPONENT-STATUS по конвенции GMSEC: 0 GREEN, 1 YELLOW, 2 ORANGE, 4 RED.
+    """
+    period = config.MCC_HEARTBEAT_S
+    if period <= 0:
+        return
+    while True:
+        age = (
+            None
+            if telemetry.latest is None
+            else round(max(0.0, time.time() - telemetry.latest_at), 1)
+        )
+        if not bridge.connected:
+            status = 4  # RED — нет связи с бортом
+        elif age is None or age > 5:
+            status = 1  # YELLOW — связь есть, телеметрия устарела
+        else:
+            status = 0  # GREEN
+        hub.publish(
+            {
+                "type": "heartbeat",
+                "data": {
+                    "component": "MCC-BACKEND",
+                    "component_status": status,
+                    "bridge_connected": bridge.connected,
+                    "agent_state": "running" if agent.busy else "idle",
+                    "telemetry_age_s": age,
+                    "subscribers": hub.subscriber_count,
+                    "pub_rate_s": period,
+                },
+            }
+        )
+        await asyncio.sleep(period)
+
+
 @contextlib.asynccontextmanager
 async def lifespan(_: FastAPI):
     await event_log.open()
     _background.append(asyncio.create_task(bridge.run()))
+    _background.append(asyncio.create_task(heartbeat_loop()))
     log.info("MCC backend started; bridge target %s:%s", config.KSP_BRIDGE_HOST, config.KSP_BRIDGE_PORT)
     yield
     await agent.stop()
@@ -128,15 +166,17 @@ async def websocket_endpoint(ws: WebSocket):
     await ws.accept()
     queue = hub.subscribe()
 
+    async def send(msg: dict) -> None:
+        # Единый выход в шину: каждое сообщение — в GMSEC-конверте.
+        await ws.send_json(gmsec.envelope(msg))
+
     # Initial state snapshot so the UI renders immediately.
-    await ws.send_json({"type": "bridge_status", "connected": bridge.connected})
-    await ws.send_json(
-        {"type": "agent_status", "state": "running" if agent.busy else "idle"}
-    )
+    await send({"type": "bridge_status", "connected": bridge.connected})
+    await send({"type": "agent_status", "state": "running" if agent.busy else "idle"})
     if telemetry.latest is not None:
-        await ws.send_json({"type": "telemetry", "data": telemetry.latest})
+        await send({"type": "telemetry", "data": telemetry.latest})
     for entry in await event_log.recent(limit=100):
-        await ws.send_json({"type": "event_log", "entry": entry})
+        await send({"type": "event_log", "entry": entry})
 
     async def sender():
         while True:
@@ -153,7 +193,7 @@ async def websocket_endpoint(ws: WebSocket):
                 if text:
                     accepted = await agent.handle_directive(text)
                     if not accepted:
-                        await ws.send_json(
+                        await send(
                             {
                                 "type": "agent_event",
                                 "event": {
@@ -174,13 +214,9 @@ async def websocket_endpoint(ws: WebSocket):
                         {"cmd": msg.get("cmd"), "args": msg.get("args"), "ok": True},
                     )
                     hub.publish({"type": "event_log", "entry": entry})
-                    await ws.send_json(
-                        {"type": "command_result", "ok": True, "result": result}
-                    )
+                    await send({"type": "command_result", "ok": True, "result": result})
                 except BridgeError as e:
-                    await ws.send_json(
-                        {"type": "command_result", "ok": False, "error": str(e)}
-                    )
+                    await send({"type": "command_result", "ok": False, "error": str(e)})
     except WebSocketDisconnect:
         pass
     finally:

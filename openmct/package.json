@@ -1,0 +1,10 @@
+{
+  "name": "ksp2-openmct",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Real NASA Open MCT frontend fed by the KSP2 MCC backend telemetry",
+  "dependencies": {
+    "express": "^4.19.2",
+    "openmct": "4.0.0"
+  }
+}

@@ -86,7 +86,16 @@ body {
 
 .header-status {
   display: flex;
+  align-items: center;
   gap: 8px;
+}
+
+.header-utc {
+  font-size: 12px;
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+  margin-right: 4px;
 }
 
 .header-clock {
@@ -318,8 +327,14 @@ body {
 
 .grid-systems {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  grid-auto-rows: min-content;
   gap: 12px;
+  overflow-y: auto;
+  min-height: 0;
+}
+.grid-systems > :first-child {
+  grid-column: 1 / -1; /* telemetry tiles full width */
 }
 
 .grid-log {
@@ -1029,52 +1044,53 @@ body {
   gap: 6px;
 }
 
+/* Open MCT condition blocks — solid state fills */
 .cw-lamp {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 2px;
-  padding: 8px 4px;
-  border-radius: 7px;
-  background: var(--surface-2);
-  border: 1px solid var(--border);
-  min-height: 46px;
+  gap: 1px;
+  padding: 7px 4px;
+  border-radius: 2px;
+  min-height: 40px;
 }
 
 .cw-label {
   font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.06em;
+  font-weight: 500;
+  letter-spacing: 0.02em;
 }
 
 .cw-note {
   font-size: 10px;
+  opacity: 0.85;
+}
+
+.cw-ok {
+  background: var(--good);
+  color: #0e2417;
+}
+.cw-off {
+  background: #3a3a3a;
   color: var(--ink-muted);
 }
-
-.cw-ok { color: #4c8a4c; }
-.cw-ok .cw-label { color: #4c8a4c; }
-.cw-off { opacity: 0.4; }
 .cw-caution {
-  background: rgba(250, 178, 25, 0.1);
-  border-color: rgba(250, 178, 25, 0.5);
+  background: var(--warning);
+  color: #2a1600;
 }
-.cw-caution .cw-label { color: var(--warning); }
 .cw-warning {
-  background: rgba(250, 178, 25, 0.16);
-  border-color: var(--warning);
+  background: var(--warning);
+  color: #2a1600;
 }
-.cw-warning .cw-label { color: var(--warning); }
 .cw-critical {
-  background: rgba(208, 59, 59, 0.16);
-  border-color: var(--critical);
+  background: var(--critical);
+  color: #fff;
   animation: cw-blink 1s step-end infinite;
 }
-.cw-critical .cw-label { color: #e66767; }
 
 @keyframes cw-blink {
-  50% { background: rgba(208, 59, 59, 0.35); }
+  50% { background: #a82700; }
 }
 
 .cw-alarm {
@@ -1270,6 +1286,52 @@ body {
   flex: 1;
 }
 
+/* ------------------------------------------------------------------ gauges */
+
+.gauge-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(118px, 1fr));
+  gap: 8px;
+  align-items: start;
+}
+
+.gauge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: 3px;
+  padding: 4px 2px 6px;
+}
+
+.gauge-svg {
+  width: 100%;
+  max-width: 150px;
+  height: auto;
+}
+
+.gauge-label {
+  font-size: 11px;
+  color: var(--ink-muted);
+  text-align: center;
+  margin-top: 1px;
+}
+
+/* Open MCT object-frame controls (decorative chrome) */
+.card-title::after {
+  content: "⧉  ⤢  ⋯";
+  color: var(--ink-muted);
+  font-size: 11px;
+  letter-spacing: 1px;
+  opacity: 0.6;
+  margin-left: 8px;
+  white-space: nowrap;
+}
+.panel-titlebar::after,
+.dock-rcs .card-title::after {
+  content: none;
+}
+
 /* ----------------------------------------------------------------- docking */
 
 .grid-docking {
@@ -1393,6 +1455,202 @@ body {
     gap: 8px;
   }
   .tiles {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* =========================================================================
+   Минимальный пульт руководителя: контроль готовности, ссылка на Open MCT,
+   ручное управление, стыковка. Телеметрия вынесена в Open MCT.
+   ========================================================================= */
+
+.grid-pult {
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr) auto;
+  grid-template-areas:
+    "poll cw"
+    "poll omct";
+  gap: 12px;
+  min-height: 0;
+  overflow-y: auto;
+}
+.grid-pult .poll { grid-area: poll; }
+.grid-pult .cw { grid-area: cw; }
+.grid-pult .omct-card { grid-area: omct; }
+
+/* ---- контроль готовности GO/NO-GO ---- */
+
+.poll-verdict {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  padding: 2px 10px;
+  border-radius: 3px;
+}
+.pv-go { color: var(--good); border: 1px solid var(--good); }
+.pv-nogo { color: var(--critical); border: 1px solid var(--critical); background: rgba(255, 60, 0, 0.12); }
+.pv-na { color: var(--ink-muted); border: 1px solid var(--border); }
+
+.poll-list {
+  display: flex;
+  flex-direction: column;
+  margin-top: 8px;
+}
+
+.poll-row {
+  display: grid;
+  grid-template-columns: 120px minmax(0, 1fr) auto 92px;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 10px;
+  border-bottom: 1px solid var(--border);
+}
+.poll-row:last-child { border-bottom: none; }
+
+.poll-call {
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 0.04em;
+  color: var(--ink);
+}
+.poll-role { font-size: 12px; color: var(--ink-2); }
+.poll-note {
+  font-size: 12px;
+  color: var(--ink-muted);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.poll-mark {
+  text-align: center;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  padding: 3px 6px;
+  border-radius: 3px;
+}
+.pm-go { color: var(--good); background: rgba(96, 186, 123, 0.14); }
+.pm-nogo { color: var(--critical); background: rgba(255, 60, 0, 0.16); }
+.pm-na { color: var(--ink-muted); background: var(--surface-2); }
+
+.pr-nogo { background: rgba(255, 60, 0, 0.05); }
+
+.poll-req {
+  margin-top: 12px;
+  width: 100%;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--ink-2);
+  font-size: 12px;
+  padding: 8px;
+  cursor: pointer;
+}
+.poll-req:hover { color: var(--ink); border-color: var(--accent); }
+
+/* ---- ссылка/карточка Open MCT ---- */
+
+.omct-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  text-decoration: none;
+  background: var(--surface);
+  border: 1px solid var(--accent-2);
+  border-radius: 3px;
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 5px 10px;
+}
+.omct-link:hover { background: var(--surface-2); border-color: var(--accent); }
+
+.omct-hint {
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--ink-2);
+  margin: 8px 0 12px;
+}
+
+.omct-open {
+  display: inline-block;
+  text-decoration: none;
+  color: var(--accent);
+  font-size: 13px;
+  font-weight: 600;
+}
+.omct-open:hover { text-decoration: underline; }
+
+/* ---- ручное управление ---- */
+
+.grid-manual {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(280px, 1fr);
+  gap: 12px;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+/* ---- стыковка: боковая колонка ---- */
+
+.dock-side {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 0;
+}
+
+.dock-popout {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--ink-2);
+  font-size: 12px;
+  padding: 8px;
+  cursor: pointer;
+}
+.dock-popout:hover { color: var(--ink); border-color: var(--accent); }
+
+/* ---- индикатор шины сообщений GMSEC (шапка) ---- */
+
+.bus {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  padding: 3px 9px;
+  border-radius: 3px;
+  border: 1px solid var(--border);
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+}
+.bus-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--ink-muted);
+}
+.bus-seq { color: var(--ink-muted); font-weight: 500; }
+.hb-green .bus-dot { background: var(--good); box-shadow: 0 0 6px var(--good); }
+.hb-green { border-color: rgba(96, 186, 123, 0.5); color: var(--ink); }
+.hb-yellow .bus-dot { background: var(--warning); }
+.hb-yellow { border-color: rgba(255, 138, 13, 0.5); }
+.hb-orange .bus-dot { background: var(--warning); }
+.hb-red .bus-dot { background: var(--critical); }
+.hb-red { border-color: rgba(255, 60, 0, 0.5); }
+.hb-dead .bus-dot { background: var(--ink-muted); }
+.hb-dead { color: var(--ink-muted); }
+
+@media (max-width: 1200px) {
+  .grid-pult {
+    grid-template-columns: 1fr;
+    grid-template-areas: "poll" "cw" "omct";
+    grid-template-rows: auto auto auto;
+  }
+  .grid-manual {
     grid-template-columns: 1fr;
   }
 }
