@@ -4,11 +4,11 @@ import type { TrackPoint, Vessel } from "../types";
 const W = 360;
 const H = 180;
 
-const ACCENT = "#35c4e6";
-const LAND = "#173a26";
-const LAND_EDGE = "#2c5a3a";
-const GRID = "#173049";
-const INK_MUTED = "#6d8496";
+const ACCENT = "#03ace4";
+const LAND = "#3a3a3a";
+const LAND_EDGE = "#4a4a4a";
+const GRID = "#3f3f3f";
+const INK_MUTED = "#808080";
 
 // Kerbin launch site (approx), only shown when orbiting Kerbin.
 const KSC = { lat: -0.1, lon: -74.6, label: "КЦ" };
@@ -87,8 +87,8 @@ export function GroundTrack(props: {
       </div>
       <div className="gt-body">
         <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" className="gt-svg">
-          {/* ocean */}
-          <rect x={0} y={0} width={W} height={H} fill="#081522" />
+          {/* ocean / base */}
+          <rect x={0} y={0} width={W} height={H} fill="#242424" />
 
           {/* land */}
           {isKerbin &&

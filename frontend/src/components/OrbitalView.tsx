@@ -5,8 +5,8 @@ const VB = 200;
 const CENTER = 100;
 const DRAW = 150; // max drawing extent across the orbit
 
-const ACCENT = "#35c4e6";
-const BODY = "#173a26";
+const ACCENT = "#03ace4";
+const BODY = "#3a3a3a";
 
 export function OrbitalView({ vessel }: { vessel: Vessel | null | undefined }) {
   const o = vessel?.orbit;

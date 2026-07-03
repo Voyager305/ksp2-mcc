@@ -110,9 +110,9 @@ export function DockingDisplay(props: {
           <circle cx={100} cy={100} r={3} fill="none" stroke="#f5c542" strokeWidth={1.5} />
 
           {/* relative velocity vector */}
-          <line x1={tx} y1={ty} x2={vx} y2={vy} stroke="#ff4d4d" strokeWidth={1.5} />
+          <line x1={tx} y1={ty} x2={vx} y2={vy} stroke="#ff3c00" strokeWidth={1.5} />
           {/* target marker */}
-          <circle cx={Math.max(6, Math.min(194, tx))} cy={Math.max(6, Math.min(194, ty))} r={4} fill="#35c4e6" stroke="#fff" strokeWidth={1} />
+          <circle cx={Math.max(6, Math.min(194, tx))} cy={Math.max(6, Math.min(194, ty))} r={4} fill="#03ace4" stroke="#fff" strokeWidth={1} />
 
           <text x={6} y={14} fill="#898781" fontSize={9}>
             ±{range >= 1000 ? range / 1000 + " км" : range + " м"}

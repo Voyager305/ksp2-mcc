@@ -3,7 +3,6 @@ services:
     build: ./backend
     container_name: mcc-backend
     environment:
-      # OpenAI-совместимый провайдер (по умолчанию Cloud.ru Foundation Models)
       - MCC_API_KEY=${MCC_API_KEY:-}
       - MCC_BASE_URL=${MCC_BASE_URL:-https://foundation-models.api.cloud.ru/v1}
       - MCC_MODEL=${MCC_MODEL:-deepseek-ai/DeepSeek-V3}

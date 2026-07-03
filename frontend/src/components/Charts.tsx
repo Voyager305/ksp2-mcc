@@ -10,13 +10,13 @@ import {
 import { fmtClock } from "../format";
 import type { ChartPoint } from "../types";
 
-// NASA console palette (cyan / GO-green / caution-amber), fixed order
-const SERIES_1 = "#35c4e6"; // cyan
-const SERIES_2 = "#37d367"; // green
-const SERIES_3 = "#f5b301"; // amber
+// Open MCT palette (cyan key / amber / green)
+const SERIES_1 = "#03ace4"; // Open MCT key cyan
+const SERIES_2 = "#ffb66c"; // status alert amber
+const SERIES_3 = "#60ba7b"; // status info green
 
-const GRID = "#18263a";
-const AXIS_INK = "#6d8496";
+const GRID = "#3f3f3f";
+const AXIS_INK = "#808080";
 
 interface SeriesDef {
   key: keyof ChartPoint;

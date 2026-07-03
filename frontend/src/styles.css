@@ -1,19 +1,19 @@
-/* NASA Mission Control theme — dark blue "flight control room" console look */
+/* Theme matched to NASA Open MCT — "Espresso" (nasa/openmct) */
 :root {
-  --page: #05070d;
-  --surface: #0c111c;
-  --surface-2: #121a2a;
-  --ink: #e8f4fb;
-  --ink-2: #b7cede;
-  --ink-muted: #6d8496;
-  --grid: #18263a;
-  --baseline: #23374f;
-  --border: rgba(90, 150, 200, 0.18);
-  --accent: #35c4e6; /* console cyan */
-  --accent-2: #2a7fd0; /* deep blue */
-  --good: #37d367; /* GO green */
-  --warning: #f5b301; /* caution amber */
-  --critical: #ff4d4d; /* warning red */
+  --page: #2c2c2c; /* $colorBodyBg */
+  --surface: #333333; /* panel, pulled forward */
+  --surface-2: #464646; /* controls */
+  --ink: #ffffff; /* $colorBodyFgEm */
+  --ink-2: #acacac; /* $colorBodyFg */
+  --ink-muted: #808080; /* $colorBodyFgSubtle */
+  --grid: #3f3f3f;
+  --baseline: #4a4a4a;
+  --border: rgba(172, 172, 172, 0.2); /* $colorInteriorBorder */
+  --accent: #03ace4; /* $colorKey — Open MCT cyan */
+  --accent-2: #007fad; /* $colorKeyBg / major button */
+  --good: #60ba7b; /* $colorStatusInfo */
+  --warning: #ff8a0d; /* $colorAlert */
+  --critical: #ff3c00; /* $colorError */
   --mono: ui-monospace, "Cascadia Mono", "Consolas", "Roboto Mono", monospace;
 }
 
@@ -29,12 +29,10 @@ body,
 }
 
 body {
-  background:
-    radial-gradient(1200px 700px at 50% -10%, #0a1424 0%, var(--page) 70%),
-    var(--page);
+  background: var(--page);
   color: var(--ink-2);
-  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
-  font-size: 14px;
+  font-family: "Helvetica Neue", Helvetica, Arial, system-ui, sans-serif;
+  font-size: 13px;
 }
 
 .app {
@@ -45,22 +43,6 @@ body {
   gap: 12px;
 }
 
-/* faint CRT scanlines for the mission-control feel */
-.app::after {
-  content: "";
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 9999;
-  background: repeating-linear-gradient(
-    0deg,
-    rgba(0, 0, 0, 0.18) 0px,
-    rgba(0, 0, 0, 0.18) 1px,
-    transparent 1px,
-    transparent 3px
-  );
-  opacity: 0.25;
-}
 
 /* ------------------------------------------------------------------ header */
 
@@ -68,10 +50,10 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 8px 14px;
-  background: linear-gradient(180deg, rgba(42, 127, 208, 0.14), rgba(42, 127, 208, 0.03));
+  padding: 7px 14px;
+  background: #000; /* Open MCT $colorHeadBg */
   border: 1px solid var(--border);
-  border-radius: 4px;
+  border-radius: 3px;
 }
 
 .header-title {
@@ -87,12 +69,10 @@ body {
 
 .header h1 {
   margin: 0;
-  font-family: var(--mono);
-  font-size: 17px;
-  font-weight: 700;
+  font-size: 16px;
+  font-weight: 600;
   color: var(--ink);
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 
 .header-sub {
@@ -124,19 +104,16 @@ body {
 
 .clock-label {
   font-size: 11px;
-  font-family: var(--mono);
-  letter-spacing: 0.12em;
+  letter-spacing: 0.08em;
   color: var(--ink-muted);
 }
 
 .clock-value {
-  font-family: var(--mono);
-  font-size: 22px;
-  font-weight: 700;
+  font-size: 21px;
+  font-weight: 500;
   color: var(--accent);
   font-variant-numeric: tabular-nums;
-  letter-spacing: 0.04em;
-  text-shadow: 0 0 8px rgba(53, 196, 230, 0.4);
+  letter-spacing: 0.02em;
 }
 
 .clock-phase {
@@ -201,11 +178,9 @@ body {
   padding: 5px 11px;
   border-radius: 3px;
   border: 1px solid var(--border);
-  background: rgba(0, 0, 0, 0.25);
-  font-family: var(--mono);
+  background: rgba(0, 0, 0, 0.35);
   font-size: 11px;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  letter-spacing: 0.02em;
   color: var(--ink-2);
   white-space: nowrap;
 }
@@ -215,7 +190,6 @@ body {
   height: 8px;
   border-radius: 50%;
   background: currentColor;
-  box-shadow: 0 0 6px currentColor;
 }
 
 .pill-good { color: var(--good); border-color: rgba(55, 211, 103, 0.4); }
@@ -267,15 +241,13 @@ body {
 }
 
 .tab {
-  background: rgba(0, 0, 0, 0.25);
+  background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 3px;
+  border-bottom: none;
+  border-radius: 3px 3px 0 0;
   color: var(--ink-2);
-  padding: 8px 20px;
-  font-family: var(--mono);
+  padding: 7px 18px;
   font-size: 12px;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
   cursor: pointer;
 }
 
@@ -285,16 +257,14 @@ body {
 }
 
 .tab-active {
-  background: linear-gradient(180deg, rgba(53, 196, 230, 0.25), rgba(53, 196, 230, 0.08));
-  border-color: var(--accent);
-  color: var(--accent);
-  font-weight: 700;
-  box-shadow: 0 0 10px rgba(53, 196, 230, 0.25);
+  background: var(--surface-2);
+  color: var(--ink);
+  border-top: 2px solid var(--accent);
+  padding-top: 6px;
 }
 
-/* console-style tabular numerics */
+/* tabular numerics for aligned readouts */
 .tile-value,
-.tile-hint,
 .nav-v,
 .sys-v,
 .dock-v,
@@ -302,16 +272,8 @@ body {
 .stack-num,
 .log-time,
 .chart-tooltip-value,
-.chart-tooltip-time {
-  font-family: var(--mono);
+.clock-value {
   font-variant-numeric: tabular-nums;
-}
-
-/* phosphor-green data readouts */
-.sys-v,
-.dock-v {
-  color: var(--good);
-  text-shadow: 0 0 7px rgba(55, 211, 103, 0.3);
 }
 
 .tabpanel {
@@ -384,78 +346,48 @@ body {
 
 .card {
   position: relative;
-  background:
-    linear-gradient(180deg, rgba(53, 196, 230, 0.03), rgba(0, 0, 0, 0)) ,
-    var(--surface);
+  background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 4px;
-  padding: 0 12px 12px;
+  border-radius: 3px;
+  padding: 0 10px 10px;
   display: flex;
   flex-direction: column;
   min-height: 0;
-  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.3);
 }
 
-/* console-window corner brackets */
-.card::before,
-.card::after {
-  content: "";
-  position: absolute;
-  width: 11px;
-  height: 11px;
-  border-color: var(--accent);
-  border-style: solid;
-  opacity: 0.55;
-  pointer-events: none;
-}
-.card::before {
-  top: -1px;
-  left: -1px;
-  border-width: 2px 0 0 2px;
-}
-.card::after {
-  bottom: -1px;
-  right: -1px;
-  border-width: 0 2px 2px 0;
-}
-
-/* console window header strip */
+/* Open MCT object-frame header */
 .card-title {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 10px;
-  margin: 0 -12px 10px;
-  padding: 7px 12px;
+  margin: 0 -10px 8px;
+  padding: 5px 10px;
   border-bottom: 1px solid var(--border);
-  background: linear-gradient(180deg, rgba(42, 127, 208, 0.12), rgba(42, 127, 208, 0.02));
+  background: rgba(0, 0, 0, 0.2);
 }
 
 .card-title h2 {
   margin: 0;
-  font-family: var(--mono);
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--accent);
+  font-size: 12px;
+  font-weight: 400;
+  letter-spacing: 0.02em;
+  color: var(--ink-2);
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 7px;
 }
 
 .card-title h2::before {
   content: "";
-  width: 7px;
-  height: 7px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
   background: var(--accent);
-  box-shadow: 0 0 6px var(--accent);
 }
 
 .card-note {
   font-size: 11px;
-  font-family: var(--mono);
-  letter-spacing: 0.03em;
   color: var(--ink-muted);
 }
 
@@ -476,19 +408,15 @@ body {
 }
 
 .tile-label {
-  font-size: 10px;
-  font-family: var(--mono);
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
+  font-size: 11px;
   color: var(--ink-muted);
   margin-bottom: 1px;
 }
 
 .tile-value {
-  font-size: 17px;
-  font-weight: 700;
-  color: var(--good); /* phosphor-green nominal readout */
-  text-shadow: 0 0 7px rgba(55, 211, 103, 0.35);
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--ink);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -762,20 +690,18 @@ body {
 
 .btn {
   border: 1px solid var(--border);
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--surface-2);
   color: var(--ink-2);
   border-radius: 3px;
-  padding: 7px 12px;
-  font-family: var(--mono);
+  padding: 6px 12px;
   font-size: 12px;
-  letter-spacing: 0.03em;
   cursor: pointer;
   transition: background 0.12s ease;
 }
 
 .btn:hover:not(:disabled) {
-  background: rgba(53, 196, 230, 0.1);
-  border-color: rgba(53, 196, 230, 0.35);
+  background: #545454;
+  color: var(--ink);
 }
 
 .btn:disabled {
@@ -784,14 +710,14 @@ body {
 }
 
 .btn-primary {
-  background: linear-gradient(180deg, var(--accent-2), #1f5fa0);
-  border-color: rgba(53, 196, 230, 0.5);
-  color: #eaf7ff;
-  font-weight: 700;
+  background: var(--accent-2); /* Open MCT $colorBtnMajorBg */
+  border-color: transparent;
+  color: #fff;
+  font-weight: 500;
 }
 
 .btn-primary:hover:not(:disabled) {
-  background: linear-gradient(180deg, #3a90e0, #2568ac);
+  background: var(--accent);
 }
 
 .btn-danger {
@@ -1252,27 +1178,23 @@ body {
 }
 
 .pl-label {
-  font-family: var(--mono);
-  font-size: 10px;
-  letter-spacing: 0.08em;
+  font-size: 11px;
   color: var(--ink-muted);
 }
 
 .pl-btn {
-  background: rgba(0, 0, 0, 0.25);
+  background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 3px;
   color: var(--ink-muted);
-  font-family: var(--mono);
-  font-size: 10px;
-  letter-spacing: 0.03em;
+  font-size: 11px;
   padding: 4px 8px;
   cursor: pointer;
 }
 
 .pl-btn:hover {
-  color: var(--accent);
-  border-color: rgba(53, 196, 230, 0.4);
+  color: var(--ink);
+  border-color: var(--accent);
 }
 
 .grid-console {
@@ -1313,35 +1235,29 @@ body {
   align-items: center;
   gap: 10px;
   padding: 6px 12px;
-  background: linear-gradient(180deg, rgba(42, 127, 208, 0.14), rgba(42, 127, 208, 0.03));
+  background: #000;
   border: 1px solid var(--border);
-  border-radius: 4px;
+  border-radius: 3px;
 }
 
 .pw-dot {
   width: 9px;
   height: 9px;
   border-radius: 50%;
-  box-shadow: 0 0 6px currentColor;
 }
-.pw-on { background: var(--good); color: var(--good); }
-.pw-off { background: var(--critical); color: var(--critical); }
+.pw-on { background: var(--good); }
+.pw-off { background: var(--critical); }
 
 .pw-label {
-  font-family: var(--mono);
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  color: var(--accent);
-  font-weight: 700;
+  color: var(--ink);
+  font-weight: 600;
   font-size: 13px;
 }
 
 .pw-sub {
   margin-left: auto;
-  font-family: var(--mono);
   font-size: 11px;
   color: var(--ink-muted);
-  letter-spacing: 0.05em;
 }
 
 .panel-content {
